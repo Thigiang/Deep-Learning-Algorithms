@@ -1,12 +1,10 @@
 import numpy as np
 import h5py
-def load_dataset():
-    path = "/Users/gabati/Documents/GitHub/"
-    file_name_train, file_name_test = 'train_catvnoncat.h5', 'test_catvnoncat.h5'
-    file_path_train = path +"Datasets/"+file_name_train
-    file_path_test = path + "Datasets/"+ file_name_train
-    print(file_path_train)
-    
+import os
+def load_dataset(path, train_set, test_set):
+    file_path_train = os.path.join(path, train_set)
+    file_path_test = os.path.join(path, test_set)
+
     train_dataset = h5py.File(file_path_train, "r")
     train_set_x_orig = np.array(train_dataset["train_set_x"][:])
     train_set_y_orig = np.array(train_dataset["train_set_y"][:])
