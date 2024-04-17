@@ -1,6 +1,6 @@
 # ML/AI Algorithms
 
-This is a self project that aims to write ML/AI algorithms from scratch while learning a deep learning course from Coursera with Professor Andrew Ng.
+This is a self project that aims to practice writing ML/AI algorithms from scratch while learning a deep learning course from Coursera with Professor Andrew Ng. You can find the course from [this link](https://www.coursera.org/learn/neural-networks-deep-learning/)
 ## 1. Logistic Regression
 Logistic Regression is a binary classification. Given an input $x$ (an image), its algorithm will predict the output by calculating $\hat{y} =P(y=1|x)$.
 In Logistic Regression, we use a sigmoid function $\hat{y} = \sigma(z) = \frac{1}{1+e^-z}$ where $z = w^T x +b$ where:  
