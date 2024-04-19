@@ -11,8 +11,10 @@ This file provide algorithms to compute different activation functions that used
 import numpy as np
 class Activation:
     def sigmoid(self, Z):
-        s = 1/(1+np.exp(-Z))
-        return s
+        A = 1/(1+np.exp(-Z))
+        cache = Z
+        return A, cache
+    
     def sigmoid_backward(self, dA, Z):
         s = self.sigmoid(Z)
         ds = s*(1-s)
@@ -20,8 +22,9 @@ class Activation:
         return dZ
     
     def tanh_fnc(self, Z):
-        t = (np.exp(Z)-np.exp(-Z))/(np.exp(Z)+np.exp(-Z))
-        return t
+        A = (np.exp(Z)-np.exp(-Z))/(np.exp(Z)+np.exp(-Z))
+        cache = Z
+        return A, cache
     def tanh_backward(self, dA, Z):
         t = self.tanh_fnc(Z)
         dt = 1-np.power(t,2)
@@ -29,18 +32,25 @@ class Activation:
         return dZ
     
     def relu(self, Z):
-        r = np.max(0, Z)
-        return r
+        A = np.max(0, Z)
+        cache = Z
+        return A, cache
     def relu_backward(self, dA, Z):
         if Z >= 0:
-            return dA
+            dZ= dA
+            return dZ
         else:
-            return 0
+            dZ = 0
+            return dZ
     
     def leaky_relu(self, Z):
-        lrelu= np.max(0.01*Z, Z)
-        return lrelu
+        A= np.max(0.01*Z, Z)
+        cache = Z
+        return A, cache
     def leaky_relu_backward(self, Z):
         if Z < 0:
-            return 0.01*dA
-        else: return dA
+            dZ = 0.01*dA
+            return dZ
+        else:
+            dZ = dA 
+            return dZ
