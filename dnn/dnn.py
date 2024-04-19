@@ -190,7 +190,7 @@ class dnn:
         A_prev, dA_prev  = AL, dAL
         grads= {}
         dA_prev_temp, dW_temp, db_temp = self.linear_activation_backward(dAL, caches[L-1], 'sigmoid')
-        grads["dAL"+str(L-1), ]grads["dW"+str(L)], grads["db"+str(L)]= dAL_prev_temp, dW_temp, db_temp
+        grads["dAL"+str(L-1)], grads["dW"+str(L)], grads["db"+str(L)]= dA_prev_temp, dW_temp, db_temp
         for l in reversed(range(1,L-1)):
             cache = caches[l]
             dA_prev_temp, dW_temp, db_temp = self.linear_activation_backward(dA_prev_temp, cache, 'relu')
