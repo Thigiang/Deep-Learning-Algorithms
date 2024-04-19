@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 from activation_fnc import Activation
+Activation = Activation()
 class dnn:
     def intitialize_parameters_deep(self, layer_sizes):
         """
@@ -11,6 +12,7 @@ class dnn:
         Return:
         -- parameters: a dictionary with initialized parameters for all the layers.
         """
+        np.random.seed(13) 
         L = len(layer_sizes)
         parameters = {}
 
@@ -91,7 +93,7 @@ class dnn:
         A = X
         
         for l in range(1, L):
-            A_prev = A #The first layer use X as input. A later will be updated as we compute the linear_activation_function()
+            A_prev=A #The first layer use X as input. A later will be updated as we compute the linear_activation_function()
             W, b = parameters["W"+str(l)], parameters["b"+str(l)] #retrieve the weights and bias for layer l from parameters
             A, cache = self.linear_activation_forward(A_prev, W, b, "relu") #A is now updated and used as A_prev for computing next layer activations 
             caches.append(cache)
@@ -100,7 +102,7 @@ class dnn:
         At this point, we have computed the activations for the first L-1 layers with relu activation function. We now can compute AL (predicted y) using
         sigmoid activation function. Note that A_prev here is the layer (L-1)th activation      
         """      
-        AL, cache = self.linear_activation_forward(A_prev, parameters["W"+str(L)], parameters["b"+str(L)], "sigmoid" )
+        AL, cache = self.linear_activation_forward(A, parameters["W"+str(L)], parameters["b"+str(L)], "sigmoid" )
         caches.append(cache)
 
         return AL, caches
@@ -117,7 +119,7 @@ class dnn:
 
         """
         m = Y.shape[1]
-        loss = np.multiply(Y, np.log(AL))+np.multiply(1-Y, np.log(1-AL))
+        loss = np.multiply(np.log(AL),Y)+np.multiply(np.log(1-AL), (1-Y))
         cost = (-1/m)*np.sum(loss)
         cost = np.squeeze(np.array(cost))
         return cost
@@ -158,7 +160,7 @@ class dnn:
         -- dW: gradient of W
         -- db: gradient of b
         """
-        activation_cache, linear_cache = cache
+        linear_cache, activation_cache = cache
         if activation == 'sigmoid':
             dZ = Activation.sigmoid_backward(dA, activation_cache)
         else:
@@ -186,12 +188,12 @@ class dnn:
 
         L, m = len(caches), AL.shape[1]
         Y = Y.reshape(AL.shape)
-        dAL = -np.divide(Y, AL)+ np.divide(1-Y, 1-AL)
-        A_prev, dA_prev  = AL, dAL
+        dAL = -np.divide(Y, AL)+ np.divide((1-Y), (1-AL))
+        # A_prev, dA_prev  = AL, dAL
         grads= {}
         dA_prev_temp, dW_temp, db_temp = self.linear_activation_backward(dAL, caches[L-1], 'sigmoid')
         grads["dAL"+str(L-1)], grads["dW"+str(L)], grads["db"+str(L)]= dA_prev_temp, dW_temp, db_temp
-        for l in reversed(range(1,L-1)):
+        for l in reversed(range(L-1)):
             cache = caches[l]
             dA_prev_temp, dW_temp, db_temp = self.linear_activation_backward(dA_prev_temp, cache, 'relu')
             grads["dAL"+str(l)] = dA_prev_temp
@@ -201,7 +203,7 @@ class dnn:
         return grads
 
 
-    def update_parameters(self, grads, parameters, learning_rate):
+    def update_parameters(self, grads, params, learning_rate):
         """
         This function updates the parameters W, b after getting the gradients
 
@@ -214,15 +216,15 @@ class dnn:
         -- params: a dictionary contains the learned parameters using gradient descent.
         
         """
-        params = copy.deepcopy(parameters)
+        parameters = copy.deepcopy(params)
         L = len(parameters)//2
-        for i in range(L):
-            params["W"+str(l+1)] =  params["W"+str(l+1)] - learning_rate*grads["dW"+str(l+1)]
-            params["b"+str(l+1)] = params["b"+str(l+1)] - learning_rate*grads["db"+str(l+1)]
-        return params
+        for l in range(L):
+            parameters["W"+str(l+1)] =  parameters["W"+str(l+1)] - learning_rate*grads["dW"+str(l+1)]
+            parameters["b"+str(l+1)] = parameters["b"+str(l+1)] - learning_rate*grads["db"+str(l+1)]
+        return parameters
     
     
-    def dnn_model(self, X, Y, num_iterations, learning_rate, layer_sizes):
+    def dnn_model(self, X, Y, num_iterations, learning_rate, layer_sizes, print_cost = False):
         """
         This function aims to combine all the functions we have built earlier to make a deep neural networks model.
         
@@ -238,16 +240,19 @@ class dnn:
         -- costs: a Python list that contains the cost of the leraning algorithm at each iteration.
         """
         # Initialize parameters
+        np.random.seed(13)
         parameters = self.intitialize_parameters_deep(layer_sizes)
-        m = X.shape[0]
         costs = []
-        params = parameters
         for i in range(num_iterations):
-            AL, caches = self.L_forward_prop(X, params)
-            cost = (1/m)*(np.sum(np.dot(Y, np.log(AL))+ np.dot(1-Y, np.log(1-AL))))
+            AL, caches = self.L_forward_prop(X, parameters)
+            cost = self.compute_cost(AL, Y)
             grads = self.L_backward_prop(AL, Y, caches)
-            params = self.update_parameters(grads, params, learning_rate)
-        return params, costs
+            parameters = self.update_parameters(grads, parameters, learning_rate)
+            if i%100==0 or i == num_iterations-1:
+                costs.append(cost)
+                if print_cost:
+                    print("Cost at {}th iteration is: {}.".format(i, np.squeeze(cost)))
+        return parameters, costs
     
     def predict(self, X, params):
         """

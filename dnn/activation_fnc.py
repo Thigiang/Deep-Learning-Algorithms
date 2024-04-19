@@ -16,7 +16,7 @@ class Activation:
         return A, cache
     
     def sigmoid_backward(self, dA, Z):
-        s = self.sigmoid(Z)
+        s, cache = self.sigmoid(Z)
         ds = s*(1-s)
         dZ = dA*ds
         return dZ
@@ -26,7 +26,7 @@ class Activation:
         cache = Z
         return A, cache
     def tanh_backward(self, dA, Z):
-        t = self.tanh_fnc(Z)
+        t, cache = self.tanh_fnc(Z)
         dt = 1-np.power(t,2)
         dZ = dA*dt
         return dZ
@@ -36,21 +36,13 @@ class Activation:
         cache = Z
         return A, cache
     def relu_backward(self, dA, Z):
-        if Z >= 0:
-            dZ= dA
-            return dZ
-        else:
-            dZ = 0
-            return dZ
-    
+        dZ = np.array(dA, copy=True)
+        dZ[Z<=0]=0
+        return dZ
     def leaky_relu(self, Z):
         A= np.maximum(0.01*Z, Z)
         cache = Z
         return A, cache
-    def leaky_relu_backward(self, Z):
-        if Z < 0:
-            dZ = 0.01*dA
-            return dZ
-        else:
-            dZ = dA 
-            return dZ
+    def leaky_relu_backward(self,dA,  Z):
+        dZ=np.array(dA, copy=True)
+        dZ[Z<=0]=0.01*dA
