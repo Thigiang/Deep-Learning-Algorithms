@@ -184,7 +184,7 @@ class dnn:
         
         """
 
-        L, m = len(caches) AL.shape[1]
+        L, m = len(caches), AL.shape[1]
         Y = Y.reshape(AL.shape)
         dAL = -np.divide(Y, AL)+ np.divide(1-Y, 1-AL)
         A_prev, dA_prev  = AL, dAL
