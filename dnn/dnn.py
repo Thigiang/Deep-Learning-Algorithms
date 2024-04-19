@@ -93,14 +93,14 @@ class dnn:
         for l in range(1, L):
             A_prev = A #The first layer use X as input. A later will be updated as we compute the linear_activation_function()
             W, b = parameters["W"+str(l)], parameters["b"+str(l)] #retrieve the weights and bias for layer l from parameters
-            A, cache = self.linear_activation_function(A_prev, W, b, "relu") #A is now updated and used as A_prev for computing next layer activations 
+            A, cache = self.linear_activation_forward(A_prev, W, b, "relu") #A is now updated and used as A_prev for computing next layer activations 
             caches.append(cache)
 
         """
         At this point, we have computed the activations for the first L-1 layers with relu activation function. We now can compute AL (predicted y) using
         sigmoid activation function. Note that A_prev here is the layer (L-1)th activation      
         """      
-        AL, cache = self.linear_activation_forward(A_prev, parameter["W"+str(L)], parameter["b"+str(L)], "sigmoid" )
+        AL, cache = self.linear_activation_forward(A_prev, parameters["W"+str(L)], parameters["b"+str(L)], "sigmoid" )
         caches.append(cache)
 
         return AL, caches
