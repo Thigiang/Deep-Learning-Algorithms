@@ -32,7 +32,7 @@ class Activation:
         return dZ
     
     def relu(self, Z):
-        A = np.max(0, Z)
+        A = np.maximum(0, Z)
         cache = Z
         return A, cache
     def relu_backward(self, dA, Z):
@@ -44,7 +44,7 @@ class Activation:
             return dZ
     
     def leaky_relu(self, Z):
-        A= np.max(0.01*Z, Z)
+        A= np.maximum(0.01*Z, Z)
         cache = Z
         return A, cache
     def leaky_relu_backward(self, Z):
