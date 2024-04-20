@@ -12,7 +12,7 @@ class dnn:
         Return:
         -- parameters: a dictionary with initialized parameters for all the layers.
         """
-        np.random.seed(14) 
+        # np.random.seed(14) 
         L = len(layer_sizes)
         parameters = {}
 
@@ -121,7 +121,7 @@ class dnn:
         m = Y.shape[1]
         # loss = np.multiply(np.log(AL),Y)+np.multiply(np.log(1-AL), (1-Y))
         # cost = (-1/m)*np.sum(loss)
-        cost = (-1/m)*np.sum(np.multiply(np.log(AL), Y)+ np.multiply(np.log(1-AL), (1-Y)))
+        cost = (1./m)*(-np.dot(Y, np.log(AL).T)- np.dot((1-Y), np.log(1-AL).T))
         cost = np.squeeze(cost)
         return cost
     
@@ -141,8 +141,8 @@ class dnn:
         ##retrieve parameters from cache
         A_prev, W, b = cache
         m = A_prev.shape[1]
-        dW = (1/m)*np.dot(dZ, A_prev.T)
-        db = (1/m)*np.sum(dZ, axis=1, keepdims=True)
+        dW = (1./m)*np.dot(dZ, A_prev.T)
+        db = (1./m)*np.sum(dZ, axis=1, keepdims=True)
         dA_prev = np.dot(W.T, dZ)
 
         return dA_prev, dW, db
@@ -243,7 +243,7 @@ class dnn:
         -- costs: a Python list that contains the cost of the leraning algorithm at each iteration.
         """
         # Initialize parameters
-        np.random.seed(13)
+        # np.random.seed(13)
         parameters = self.intitialize_parameters_deep(layer_sizes)
         costs = []
         for i in range(0,num_iterations):
@@ -257,7 +257,7 @@ class dnn:
                     print("Cost at {}th iteration is: {}.".format(i, np.squeeze(cost)))
         return parameters, costs
     
-    def predict(self, X, params):
+    def predict(self, X, Y, params):
         """
         This function is used to predict the label of a new dataset using the learned parameters.
 
@@ -272,11 +272,12 @@ class dnn:
         m = X.shape[1]
         y_predictions = np.zeros((1, m))
         AL, caches = self.L_forward_prop(X, params)
-        for i in range(m):
-            if i > 0.5:
+        for i in range(AL.shape[1]):
+            if AL[0,i] > 0.5:
                 y_predictions[0,i]= 1
             else:
                 y_predictions[0,i]= 0
+        print("Accuracy: " + str(np.sum((y_predictions == Y)/m)))
         return y_predictions
 
 
