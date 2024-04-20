@@ -12,7 +12,7 @@ class dnn:
         Return:
         -- parameters: a dictionary with initialized parameters for all the layers.
         """
-        np.random.seed(13) 
+        np.random.seed(14) 
         L = len(layer_sizes)
         parameters = {}
 
@@ -61,12 +61,12 @@ class dnn:
         ## Recall: Each function in Activation class return the activations (A) and the input argument of Z (cache) for current layer l
         if activation == 'sigmoid':
             A, activation_cache = Activation.sigmoid(Z)
-        elif activation == 'tanh':
-            A, activation_cache=Activation.tanh_fnc(Z)
+        # elif activation == 'tanh':
+        #     A, activation_cache=Activation.tanh_fnc(Z)
         elif activation == 'relu':
             A, activation_cache = Activation.relu(Z)
-        else:
-            A, activation_cache = Activation.leaky_relu(Z)
+        # else:
+        #     A, activation_cache = Activation.leaky_relu(Z)
 
         cache = (linear_cache, activation_cache)
 
@@ -119,9 +119,10 @@ class dnn:
 
         """
         m = Y.shape[1]
-        loss = np.multiply(np.log(AL),Y)+np.multiply(np.log(1-AL), (1-Y))
-        cost = (-1/m)*np.sum(loss)
-        cost = np.squeeze(np.array(cost))
+        # loss = np.multiply(np.log(AL),Y)+np.multiply(np.log(1-AL), (1-Y))
+        # cost = (-1/m)*np.sum(loss)
+        cost = (-1/m)*np.sum(np.multiply(np.log(AL), Y)+ np.multiply(np.log(1-AL), (1-Y)))
+        cost = np.squeeze(cost)
         return cost
     
     def linear_backward(self, dZ, cache):
@@ -163,7 +164,7 @@ class dnn:
         linear_cache, activation_cache = cache
         if activation == 'sigmoid':
             dZ = Activation.sigmoid_backward(dA, activation_cache)
-        else:
+        elif activation == "relu":
             dZ = Activation.relu_backward(dA, activation_cache)
         dA_prev, dW, db = self.linear_backward(dZ, linear_cache)
         return dA_prev, dW, db
@@ -192,7 +193,9 @@ class dnn:
         # A_prev, dA_prev  = AL, dAL
         grads= {}
         dA_prev_temp, dW_temp, db_temp = self.linear_activation_backward(dAL, caches[L-1], 'sigmoid')
-        grads["dAL"+str(L-1)], grads["dW"+str(L)], grads["db"+str(L)]= dA_prev_temp, dW_temp, db_temp
+        grads["dAL"+str(L-1)]= dA_prev_temp
+        grads["dW"+str(L)]=dW_temp
+        grads["db"+str(L)]=db_temp
         for l in reversed(range(L-1)):
             cache = caches[l]
             dA_prev_temp, dW_temp, db_temp = self.linear_activation_backward(dA_prev_temp, cache, 'relu')
@@ -220,7 +223,7 @@ class dnn:
         L = len(parameters)//2
         for l in range(L):
             parameters["W"+str(l+1)] =  parameters["W"+str(l+1)] - learning_rate*grads["dW"+str(l+1)]
-            parameters["b"+str(l+1)] = parameters["b"+str(l+1)] - learning_rate*grads["db"+str(l+1)]
+            parameters["b"+str(l+1)] =  parameters["b"+str(l+1)] - learning_rate*grads["db"+str(l+1)]
         return parameters
     
     
@@ -243,7 +246,7 @@ class dnn:
         np.random.seed(13)
         parameters = self.intitialize_parameters_deep(layer_sizes)
         costs = []
-        for i in range(num_iterations):
+        for i in range(0,num_iterations):
             AL, caches = self.L_forward_prop(X, parameters)
             cost = self.compute_cost(AL, Y)
             grads = self.L_backward_prop(AL, Y, caches)
