@@ -3,7 +3,12 @@ import copy
 from activation_fnc import Activation
 Activation = Activation()
 class dnn:
-    def initialize_parameters_deep(self, layer_sizes):
+    def __init__(self, train_X, train_Y, layer_sizes):
+        self.__layer_sizes = layer_sizes
+        self.__train_X = train_X
+        self.__train_Y = train_Y
+        
+    def initialize_parameters_deep(self):
         """
         This function initialize weights and bias paramters for deep learning algorithm.
         Arguments:
@@ -12,13 +17,13 @@ class dnn:
         Return:
         -- parameters: a dictionary with initialized parameters for all the layers.
         """
-        np.random.seed(1) 
-        L = len(layer_sizes)
+        # np.random.seed(14) 
+        L = len(self.__layer_sizes)
         parameters = {}
 
         for l in range(1, L):
-            n_x, n_h= layer_sizes[l-1], layer_sizes[l]
-            parameters["W"+str(l)]= np.random.randn(n_h, n_x)/np.sqrt(layer_sizes[l-1])
+            n_x, n_h= self.__layer_sizes[l-1], self.__layer_sizes[l]
+            parameters["W"+str(l)]= np.random.randn(n_h, n_x)/np.sqrt(self.__layer_sizes[l-1])
             parameters["b"+str(l)]= np.zeros((n_h, 1))
 
         return parameters
@@ -107,7 +112,7 @@ class dnn:
 
         return AL, caches
     
-    def compute_cost(self, AL, Y):
+    def compute_cost(self, AL):
         """
         This function computes the cost of the algorithm after getting AL or y_hat
 
@@ -118,10 +123,10 @@ class dnn:
         -- cost: the cost of the algorithm
 
         """
-        m = Y.shape[1]
+        m = self.__train_Y.shape[1]
         # loss = np.multiply(np.log(AL),Y)+np.multiply(np.log(1-AL), (1-Y))
         # cost = (-1/m)*np.sum(loss)
-        cost = (1./m)*(-np.dot(Y, np.log(AL).T)- np.dot((1-Y), np.log(1-AL).T))
+        cost = (1./m)*(-np.dot(self.__train_Y, np.log(AL).T)- np.dot((1-self.__train_Y), np.log(1-AL).T))
         cost = np.squeeze(cost)
         return cost
     
@@ -170,7 +175,7 @@ class dnn:
         return dA_prev, dW, db
     
     
-    def L_backward_prop(self, AL, Y, caches):
+    def L_backward_prop(self, AL, caches):
 
         """
         This function does the same job as linear_activation_backward() function, but for all the layers in neural networks starting from layer l-1.
@@ -188,7 +193,7 @@ class dnn:
         """
 
         L, m = len(caches), AL.shape[1]
-        Y = Y.reshape(AL.shape)
+        Y = self.__train_Y.reshape(AL.shape)
         dAL = -np.divide(Y, AL)+ np.divide((1-Y), (1-AL))
         # A_prev, dA_prev  = AL, dAL
         grads= {}
@@ -227,7 +232,7 @@ class dnn:
         return parameters
     
     
-    def fit(self, X, Y, num_iterations, learning_rate, layer_sizes, print_cost = False):
+    def fit(self, num_iterations, learning_rate, print_cost = False):
         """
         This function aims to combine all the functions we have built earlier to make a deep neural networks model.
         
@@ -244,12 +249,12 @@ class dnn:
         """
         # Initialize parameters
         # np.random.seed(13)
-        parameters = self.initialize_parameters_deep(layer_sizes)
+        parameters = self.initialize_parameters_deep()
         costs = []
         for i in range(0,num_iterations):
-            AL, caches = self.L_forward_prop(X, parameters)
-            cost = self.compute_cost(AL, Y)
-            grads = self.L_backward_prop(AL, Y, caches)
+            AL, caches = self.L_forward_prop(self.__train_X, parameters)
+            cost = self.compute_cost(AL)
+            grads = self.L_backward_prop(AL, caches)
             parameters = self.update_parameters(grads, parameters, learning_rate)
             if i%100==0 or i == num_iterations-1:
                 costs.append(cost)
@@ -259,7 +264,7 @@ class dnn:
     
     def predict(self, X, params):
         """
-        This function is used to predict the label of a new dataset using the learned parameters.
+        This function is used to predict the label of a new dataset-different to train_X-using the learned parameters.
 
         Arguments:
         -- X: a new dataset (or test dataset) that we want to predict the labels
@@ -277,10 +282,11 @@ class dnn:
                 y_predictions[0,i]= 1
             else:
                 y_predictions[0,i]= 0
-
+        return y_predictions
+    
     def accuracy(self, Y_pred, Y):
-        accuracy = np.sum((Y_pred==Y)/Y.shape[1])
-        return accuracy
+        return np.sum((Y_pred==Y)/Y.shape[1])
+
 
         
 
