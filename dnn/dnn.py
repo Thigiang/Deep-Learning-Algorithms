@@ -17,7 +17,7 @@ class deepNeuralNet:
         Return:
         -- parameters: a dictionary with initialized parameters for all the layers.
         """
-        # np.random.seed(14) 
+        np.random.seed(1) 
         L = len(layer_sizes)
         parameters = {}
 
@@ -201,6 +201,7 @@ class deepNeuralNet:
         grads["dAL"+str(L-1)]= dA_prev_temp
         grads["dW"+str(L)]=dW_temp
         grads["db"+str(L)]=db_temp
+
         for l in reversed(range(L-1)):
             cache = caches[l]
             dA_prev_temp, dW_temp, db_temp = self.linear_activation_backward(dA_prev_temp, cache, 'relu')
@@ -237,8 +238,6 @@ class deepNeuralNet:
         This function aims to combine all the functions we have built earlier to make a deep neural networks model.
         
         Arguments:
-        -- X: training data
-        -- Y: true labels for training data
         -- num_interations: an integer number of iterations we want to train the parameters.
         -- learning_rateL a floating number that defines how big a step we want the parameters to be updated at each iteration
         -- layer_sizes: a Python lists that contains the size of the layers (including the input layer-X)
@@ -248,7 +247,7 @@ class deepNeuralNet:
         -- costs: a Python list that contains the cost of the leraning algorithm at each iteration.
         """
         # Initialize parameters
-        # np.random.seed(13)
+        np.random.seed(1)
         parameters = self.initialize_parameters_deep(self.__layer_sizes)
         costs = []
         for i in range(0,num_iterations):
