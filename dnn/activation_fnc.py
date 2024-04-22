@@ -15,10 +15,11 @@ class Activation:
         cache = Z
         return A, cache
     
-    def sigmoid_backward(self, dA, Z):
-        s, cache = self.sigmoid(Z)
-        ds = s*(1-s)
-        dZ = dA*ds
+    def sigmoid_backward(self, dA, cache):
+        Z = cache
+        s = 1/(1+np.exp(-Z))
+        dZ = dA*s*(1-s)
+        
         return dZ
     
     def tanh_fnc(self, Z):
@@ -35,7 +36,8 @@ class Activation:
         A = np.maximum(0, Z)
         cache = Z
         return A, cache
-    def relu_backward(self, dA, Z):
+    def relu_backward(self, dA, cache):
+        Z = cache
         dZ = np.array(dA, copy=True)
         dZ[Z<=0]=0
         return dZ

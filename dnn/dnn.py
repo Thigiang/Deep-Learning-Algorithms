@@ -3,7 +3,7 @@ import copy
 from activation_fnc import Activation
 Activation = Activation()
 class dnn:
-    def intitialize_parameters_deep(self, layer_sizes):
+    def initialize_parameters_deep(self, layer_sizes):
         """
         This function initialize weights and bias paramters for deep learning algorithm.
         Arguments:
@@ -12,13 +12,13 @@ class dnn:
         Return:
         -- parameters: a dictionary with initialized parameters for all the layers.
         """
-        # np.random.seed(14) 
+        np.random.seed(1) 
         L = len(layer_sizes)
         parameters = {}
 
         for l in range(1, L):
             n_x, n_h= layer_sizes[l-1], layer_sizes[l]
-            parameters["W"+str(l)]= np.random.randn(n_h, n_x)*0.01
+            parameters["W"+str(l)]= np.random.randn(n_h, n_x)/np.sqrt(layer_sizes[l-1])
             parameters["b"+str(l)]= np.zeros((n_h, 1))
 
         return parameters
@@ -227,7 +227,7 @@ class dnn:
         return parameters
     
     
-    def dnn_model(self, X, Y, num_iterations, learning_rate, layer_sizes, print_cost = False):
+    def fit(self, X, Y, num_iterations, learning_rate, layer_sizes, print_cost = False):
         """
         This function aims to combine all the functions we have built earlier to make a deep neural networks model.
         
@@ -244,7 +244,7 @@ class dnn:
         """
         # Initialize parameters
         # np.random.seed(13)
-        parameters = self.intitialize_parameters_deep(layer_sizes)
+        parameters = self.initialize_parameters_deep(layer_sizes)
         costs = []
         for i in range(0,num_iterations):
             AL, caches = self.L_forward_prop(X, parameters)
@@ -257,7 +257,7 @@ class dnn:
                     print("Cost at {}th iteration is: {}.".format(i, np.squeeze(cost)))
         return parameters, costs
     
-    def predict(self, X, Y, params):
+    def predict(self, X, params):
         """
         This function is used to predict the label of a new dataset using the learned parameters.
 
@@ -277,9 +277,10 @@ class dnn:
                 y_predictions[0,i]= 1
             else:
                 y_predictions[0,i]= 0
-        print("Accuracy: " + str(np.sum((y_predictions == Y)/m)))
-        return y_predictions
 
+    def accuracy(self, Y_pred, Y):
+        accuracy = np.sum((Y_pred==Y)/Y.shape[1])
+        return accuracy
 
         
 
