@@ -35,7 +35,13 @@ def relu_backward(dA, cache):
 
     return dZ
 
+def load_dataset():
+    np.random.seed(1)
+    train_X, train_Y = sklearn.datasets.make_circles(n_samples = 300, noise = 0.05)
+    np.random.seed(2)
+    test_X, test_Y = sklearn.datasets.make_circles(n_samples = 100, noise = 0.05)
 
+    return train_X, train_Y, test_X, test_Y
 def load_2D_dataset(path):
     file_path = os.path.join(path, 'Datasets/data.mat')
     data = scipy.io.loadmat(file_path)

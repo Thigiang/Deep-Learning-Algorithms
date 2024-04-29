@@ -403,7 +403,6 @@ def deep_neural_net_opt(X, Y, initialization, layer_sizes, learning_rate=0.075, 
     if lambd == 0. and keep_prob == 1.0:
         for i in range(num_iterations):
             AL, caches = L_forward(X, parameters)  #caches stores (linear_cache, activation_cache) for all layers
-            
             cost = compute_cost(AL, Y)
             grads = L_backpropagation(AL, Y, caches)
             if grad_check:
@@ -421,6 +420,8 @@ def deep_neural_net_opt(X, Y, initialization, layer_sizes, learning_rate=0.075, 
             # caches stores ((linear_cache, activation_cache), D) for layers in dropout_layers and ((linear_cache, activation_cache), 0) for layers without dropout
             cost = compute_cost_with_dropout(AL, Y)
             grads = L_backprop_with_dropout(AL, Y, caches, keep_prob=keep_prob, dropout_layers=dropout_layers)
+            if grad_check:
+                difference = gradients_check(parameters, grads, X, Y, 1e-7, print_msg=True)
             parameters = update_parameters(parameters, grads, learning_rate = learning_rate)
             if i % 1000 == 0:
                 if print_cost:
@@ -432,6 +433,8 @@ def deep_neural_net_opt(X, Y, initialization, layer_sizes, learning_rate=0.075, 
             AL, caches = L_forward(X, parameters)
             cost = compute_cost_with_regularization(AL, Y, parameters, lambd = lambd)
             grads = L_backprop_with_regularization(AL, Y, caches, lambd=lambd, parameters=parameters)
+            if grad_check:
+                difference = gradients_check(parameters, grads, X, Y, 1e-7, print_msg=True)
             parameters = update_parameters(parameters, grads, learning_rate=learning_rate)
             if i % 1000 == 0:
                 if print_cost:
