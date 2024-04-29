@@ -1,5 +1,5 @@
 import numpy as np
-from dnn_utils import sigmoid, relu, sigmoid_backward, relu_backward,initialize_parameters_deep, relu_backward_with_dropout
+from dnn_utils import sigmoid, relu, sigmoid_backward, relu_backward,initialize_parameters_deep
 
 
 """
@@ -47,6 +47,7 @@ def L_forward(X, parameters):
 
 
 def dropout(A, keep_prob):
+    np.random.seed(1)
     D = np.random.rand(A.shape[0], A.shape[1])
     D = (D < keep_prob).astype(int)
     A = np.multiply(A, D)
@@ -58,6 +59,7 @@ def L_forward_with_dropout(X, parameters, keep_prob, dropout_layers):
     """
     This function compute the output AL without dop
     """
+    np.random.seed(1)
     L = len(parameters)//2 # Each layer contain 2 parameters Wi and bi in parameters dictionary
     A = X
     caches = []
@@ -114,7 +116,12 @@ def compute_cost_with_regularization(AL, Y, parameters, lambd):
 
     return cost
 
+def compute_cost_with_dropout(AL, Y):
+    m = Y.shape[1]
+    logprobs = np.multiply(-np.log(AL), Y) + np.multiply(-np.log(1-AL), 1 - Y)
+    loss = 1./m * np.nansum(logprobs)
 
+    return loss
 """
 ---------------------------------------------------------------------------------------------------------------------------------
                                              BACKWARD PROPAGATION
@@ -142,17 +149,6 @@ def linear_activation_backward(dA, cache, activation):
     
     return dA_prev, dW, db
 
-def linear_activation_backward_with_dropout(dA, cache, activation):
-    linear_cache, activation_cache = cache # A_prev, W, b, Z
-    A_prev, W, b = linear_cache
-    if activation == 'relu':
-        dZ = relu_backward_with_dropout(dA, A_prev)
-        dA_prev, dW, db = linear_backward(dZ, linear_cache)
-    elif activation == 'sigmoid':
-        dZ = sigmoid_backward(dA, activation_cache)
-        dA_prev, dW, db = linear_backward(dZ, linear_cache)
-    
-    return dA_prev, dW, db
 
 def L_backpropagation(AL, Y, caches):
     m = AL.shape[1]
@@ -171,6 +167,7 @@ def L_backpropagation(AL, Y, caches):
         grads["dW"+str(l+1)] = dW_temp
         grads["db"+str(l+1)] = db_temp
     return grads
+
 def L_backprop_with_regularization(AL, Y, caches, lambd, parameters):
     
     L, m= len(caches), AL.shape[1]
@@ -190,30 +187,54 @@ def L_backprop_with_regularization(AL, Y, caches, lambd, parameters):
 
 
 
+def linear_backward_with_dropout(dA, dZ, cache):
+    A_prev, W, b = cache # A_prev, W, b
+    # print("A prev: ",A_prev.shape)
+    # print("W: ", W.shape)
+    # print("dZ: ", dZ.shape)
+    m = A_prev.shape[1]
+    dW = 1./m * np.dot(dZ, A_prev.T)
+    db = 1./m * np.sum(dZ, axis = 1, keepdims = True)
+    dA_prev = np.dot(W.T, dZ)
+    # print("dW: ", dW.shape)
+    # print("dA_prev: ", dA_prev.shape)
+    return dA_prev, dW, db
+
 def L_backprop_with_dropout(AL, Y, caches, keep_prob, dropout_layers):
     """
     caches obtained from L_forward_with_dropout (cache, D) or (cache, 0) where cache = (linear_cache, activation_cache)
     """
     m = AL.shape[1]
+    # print(m)
+    # print(AL.shape)
     L = len(caches)
     Y = Y.reshape(AL.shape)
     grads = {}
 
     dAL = (-np.divide(Y, AL) + np.divide((1 - Y), (1 - AL)))
+    dZL = AL - Y
     current_cache, D = caches[L-1] #current_cache = cache = linear_cache, activation_cache
+    linear_cache, _ = current_cache
     # print(D)
-    dA_temp_prev, dW_temp, db_temp = linear_activation_backward(dAL, current_cache, 'sigmoid')
+    dA_temp_prev, dW_temp, db_temp = linear_backward_with_dropout(dAL, dZL, linear_cache)
+    # print(dA_temp_prev.shape)
+    # dA_temp_prev, dW_temp, db_temp = linear_activation_backward_with_dropout(d)
 
     if L-1 in dropout_layers:
         #if we applied dropout in layer L-1, then we need to do the same for dA L-1
         _ , D_prev = caches[L-2] #retrived D_l-1
+        # print("D2: ",  D_prev.shape)
         dA_temp_prev = np.multiply(D_prev, dA_temp_prev)
         dA_temp_prev /= keep_prob
     grads["dA"+str(L-1)], grads["dW"+str(L)], grads["db"+str(L)] = dA_temp_prev, dW_temp, db_temp
     # print("dA"+str(L-1)+" size: " + str(grads["dA"+str(L-1)].shape))
 
     for l in reversed(range(L-1)):
+        # print(l)
+        A, _, _ = linear_cache
+        dZ = np.multiply(dA_temp_prev, np.int64(A > 0))
         current_cache, D = caches[l]  
+        linear_cache, _ = current_cache
         # print(D)
         # print(current_cache)
         if l in dropout_layers: #check if we had applied dropout for layer l. If yes, we need to do the same during backprop. Otherwise, just compute dA_temp_prev, dW_temp, db_temp as usual
@@ -221,12 +242,12 @@ def L_backprop_with_dropout(AL, Y, caches, keep_prob, dropout_layers):
             We had shutdown some neuron and divided dA_l in forward propagation by keep_prob, in backward propagation,
             we need to do the same thing before we compute dA_l-1 and dWl, dbl
             """
-            dA_temp_prev, dW_temp, db_temp = linear_activation_backward_with_dropout(dA_temp_prev, current_cache, 'relu')
+            dA_temp_prev, dW_temp, db_temp = linear_backward_with_dropout(dA_temp_prev,dZ, linear_cache)
             _ , D_prev = caches[l-1]  #we need D_prev to shutdown the same neurons and divived A_temp_prev by keep_prob as we did in forwardprop
             dA_temp_prev = np.multiply(D_prev, dA_temp_prev)
             dA_temp_prev /= keep_prob      
         else:
-            dA_temp_prev, dW_temp, db_temp = linear_activation_backward(dA_temp_prev, current_cache, 'relu')
+            dA_temp_prev, dW_temp, db_temp = linear_backward_with_dropout(dA_temp_prev,dZ,  linear_cache)
         grads["dA"+str(l)], grads["dW"+str(l+1)], grads["db"+str(l+1)] = dA_temp_prev, dW_temp, db_temp
         # print("dA"+str(l)+" size: " + str(grads["dA"+str(l-1)].shape))
 
@@ -365,7 +386,6 @@ def deep_neural_net_opt(X, Y, initialization, layer_sizes, learning_rate=0.075, 
     Step 5: Update parameters
     
     """
-    # np.random.seed(1)
    # Step 1: Initialize parameters. 
 
     if initialization == "zeros":
@@ -399,7 +419,7 @@ def deep_neural_net_opt(X, Y, initialization, layer_sizes, learning_rate=0.075, 
         for i in range(num_iterations):
             AL, caches = L_forward_with_dropout(X, parameters, keep_prob = keep_prob, dropout_layers = dropout_layers)
             # caches stores ((linear_cache, activation_cache), D) for layers in dropout_layers and ((linear_cache, activation_cache), 0) for layers without dropout
-            cost = compute_cost(AL, Y)
+            cost = compute_cost_with_dropout(AL, Y)
             grads = L_backprop_with_dropout(AL, Y, caches, keep_prob=keep_prob, dropout_layers=dropout_layers)
             parameters = update_parameters(parameters, grads, learning_rate = learning_rate)
             if i % 1000 == 0:

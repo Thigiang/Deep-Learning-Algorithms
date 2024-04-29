@@ -34,10 +34,7 @@ def relu_backward(dA, cache):
     dZ[Z <= 0] = 0
 
     return dZ
-def relu_backward_with_dropout(dA, A):
-    dZ = np.multiply(dA, np.int64(A > 0))
 
-    return dZ
 
 def load_2D_dataset(path):
     file_path = os.path.join(path, 'Datasets/data.mat')
@@ -103,7 +100,7 @@ def initialize_parameters_he(layer_sizes):
     parameters: a Python dictionary stores the weights and bias for all layers in the network (layer 1 to L)
     
     """
-    np.random.seed(3)
+    np.random.seed(1)
     L = len(layer_sizes)
     parameters = {}
 
